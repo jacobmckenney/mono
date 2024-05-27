@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use log::warn;
 use reqwest::{header::AUTHORIZATION, Response};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Serialize)]
 pub struct AuthLink {

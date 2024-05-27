@@ -1,5 +1,9 @@
+# env variables
 .env
+# typescript dependencies
 node_modules
-apps/www/frontend/node_modules
+# rust build files
 target
+#turbo repo
+.turbo
 

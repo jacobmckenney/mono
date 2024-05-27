@@ -1,0 +1,15 @@
+{
+    "name": "@ekklesia/backend",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "cargo watch -x run",
+        "build": "cargo build",
+        "type-check": "cargo check"
+    },
+    "dependencies": {
+        "@ekklesia/db": "*"
+    },
+    "packageManager": "pnpm@8.8.0",
+    "author": "Jacob McKenney",
+    "license": "ISC"
+}

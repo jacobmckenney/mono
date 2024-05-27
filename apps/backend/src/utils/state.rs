@@ -1,5 +1,8 @@
 use db::DB;
 
+use crate::lib::auth;
+use auth::{AuthClient, OAuthConfig};
+
 #[derive(Clone)]
 pub struct AppState {
     pub auth_client: AuthClient,

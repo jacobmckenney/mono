@@ -1,0 +1,11 @@
+{
+    "name": "@ekklesia/monorepo",
+    "private": true,
+    "scripts": {
+        "build": "turbo build",
+        "dev": "turbo dev",
+        "db:migrate": "pnpm --filter @ekklesia/db db:migrate"
+    },
+    "author": "Jacob McKenney",
+    "license": "ISC"
+}

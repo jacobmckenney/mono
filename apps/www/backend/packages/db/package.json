@@ -1,0 +1,16 @@
+{
+    "name": "db",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "db:migrate": "sea-orm-cli migrate refresh",
+        "db:generate": "dotenv sea-orm-cli generate entity -u $DATABASE_URL -o src/entities"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "dotenv-cli": "^7.4.2"
+    }
+}

@@ -1,4 +1,3 @@
-use auth::{AuthClient, OAuthConfig};
 use db::DB;
 
 #[derive(Clone)]

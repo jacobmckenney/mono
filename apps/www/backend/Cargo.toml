@@ -1,9 +1,13 @@
-[workspace]
-members = [
-    "backend",
-    "frontend",
-    "packages/auth",
- "packages/db",
- "packages/db/migration"
- ]
-workspace.resolver = "2"
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-cors = "0.7.0"
+actix-web = "4.5.1"
+db = { path = "../../../packages/db"}
+dotenv = "0.15.0"
+serde = "1.0.201"

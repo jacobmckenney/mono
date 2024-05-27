@@ -1,3 +1,5 @@
+use std::{fmt, str::FromStr};
+
 use log::warn;
 use reqwest::{header::AUTHORIZATION, Response};
 use serde::{Deserialize, Serialize};
@@ -53,12 +55,40 @@ pub struct MicrosoftTokenResponse {
     pub id_token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum AuthType {
+    SignIn,
+    SignUp,
+}
+
+impl fmt::Display for AuthType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AuthType::SignIn => write!(f, "sign-in"),
+            AuthType::SignUp => write!(f, "sign-up"),
+        }
+    }
+}
+impl FromStr for AuthType {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<AuthType, Self::Err> {
+        match input {
+            "sign-in" => Ok(AuthType::SignIn),
+            "sign-up" => Ok(AuthType::SignUp),
+            _ => Err(()),
+        }
+    }
+}
+
 const MICROSOFT_OAUTH_BASE: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 const MICROSOFT_TOKEN_BASE: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
 
 impl AuthClient {
-    pub fn google_get_sign_in_link(&self) -> AuthLink {
+    pub fn google_get_sign_in_link(&self, auth_type: AuthType) -> AuthLink {
         let mut params: Vec<(&str, &str)> = Vec::new();
+        let auth_type = auth_type.to_string();
+        params.push(("state", auth_type.as_str()));
         params.push(("client_id", self.google.client_id.as_str()));
         params.push(("redirect_uri", self.google.redirect_uri.as_str()));
         params.push(("scope", "openid email profile"));
@@ -110,8 +140,10 @@ impl AuthClient {
         return Err(String::from("Failed to get profile"));
     }
 
-    pub fn microsoft_get_sign_in_link(&self) -> AuthLink {
+    pub fn microsoft_get_sign_in_link(&self, auth_type: AuthType) -> AuthLink {
         let mut params: Vec<(&str, &str)> = Vec::new();
+        let auth_type = auth_type.to_string();
+        params.push(("state", auth_type.as_str()));
         params.push(("client_id", self.microsoft.client_id.as_str()));
         params.push(("redirect_uri", self.microsoft.redirect_uri.as_str()));
         params.push(("scope", "openid email profile"));

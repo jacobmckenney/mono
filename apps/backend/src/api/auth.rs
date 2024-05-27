@@ -17,21 +17,25 @@ pub fn auth_router() -> Scope {
 mod auth_links {
     use actix_web::{get, web, HttpResponse};
 
-    use crate::utils::state::AppState;
+    use crate::{lib::auth::AuthType, utils::state::AppState};
     #[get("/google")]
     async fn get_google_auth_link(data: web::Data<AppState>) -> HttpResponse {
-        let url = data.auth_client.google_get_sign_in_link();
+        let url = data.auth_client.google_get_sign_in_link(AuthType::SignIn);
         return HttpResponse::Ok().json(url);
     }
 
     #[get("/microsoft")]
     async fn get_microsoft_auth_link(data: web::Data<AppState>) -> HttpResponse {
-        let url = data.auth_client.microsoft_get_sign_in_link();
+        let url = data
+            .auth_client
+            .microsoft_get_sign_in_link(AuthType::SignUp);
         return HttpResponse::Ok().json(url);
     }
 }
 
 mod auth_callbacks {
+    use std::str::FromStr;
+
     use actix_web::{
         get,
         http::header::LOCATION,
@@ -40,11 +44,12 @@ mod auth_callbacks {
     };
     use db::entities::user;
 
-    use crate::utils::state::AppState;
+    use crate::{lib::auth::AuthType, utils::state::AppState};
 
     #[derive(serde::Deserialize, Debug)]
     struct GoogleCallbackResponse {
         code: String,
+        state: String,
     }
 
     #[get("/google")]
@@ -75,11 +80,19 @@ mod auth_callbacks {
         if !profile.verified_email {
             return HttpResponse::Unauthorized().body("Email not verified by google");
         }
-        let user = sign_in(&app.db, profile.email.as_str()).await;
-        println!("{:?}", user);
-        // add sign-in/sign-up to state, add challenge for security,
-        // factor out generic sign-in/sign-up logic for app
-        println!("{:?}", profile);
+        match AuthType::from_str(&query.state) {
+            Ok(AuthType::SignIn) => {
+                let user = sign_in(&app.db, profile.email.as_str()).await;
+            }
+            Ok(AuthType::SignUp) => {
+                let user = sign_up(&app.db, profile.email.as_str(), profile.name.as_str()).await;
+                println!("{:?}", user);
+            }
+            _ => {
+                // TODO: reroute to auth with error displayed
+                return HttpResponse::BadRequest().body("Invalid state");
+            }
+        }
 
         return HttpResponse::Found()
             .append_header((LOCATION, "http://localhost:3000/home"))

@@ -496,10 +496,12 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
+ "actix-service",
  "actix-web",
  "base64 0.22.1",
  "db",
  "dotenv",
+ "futures",
  "jsonwebtoken",
  "log",
  "reqwest",

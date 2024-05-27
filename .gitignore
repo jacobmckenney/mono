@@ -1,3 +1,5 @@
 .env
 node_modules
 apps/www/frontend/node_modules
+target
+

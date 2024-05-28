@@ -59,6 +59,35 @@ const MICROSOFT_OAUTH_BASE: &str = "https://login.microsoftonline.com/common/oau
 const MICROSOFT_TOKEN_BASE: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
 
 const AUTH_COOKIE_KEY: &str = "ekklesia";
+
+pub trait AuthCookieExtractor {
+    fn extract_auth_cookie(&self) -> Result<String, String>;
+}
+
+impl AuthCookieExtractor for ServiceRequest {
+    fn extract_auth_cookie(&self) -> Result<String, String> {
+        return match self
+            .cookie(AUTH_COOKIE_KEY)
+            .map(|cookie| cookie.value().to_string())
+        {
+            Some(value) => Ok(value),
+            None => Err("Auth cookie not found".to_string()),
+        };
+    }
+}
+
+impl AuthCookieExtractor for HttpRequest {
+    fn extract_auth_cookie(&self) -> Result<String, String> {
+        return match self
+            .cookie(AUTH_COOKIE_KEY)
+            .map(|cookie| cookie.value().to_string())
+        {
+            Some(value) => Ok(value),
+            None => Err("Auth cookie not found".to_string()),
+        };
+    }
+}
+
 pub fn extract_auth_cookie(req: &ServiceRequest) -> Result<String, String> {
     let cookie = req
         .cookie(AUTH_COOKIE_KEY)

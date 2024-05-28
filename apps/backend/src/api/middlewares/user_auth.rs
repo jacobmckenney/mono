@@ -1,6 +1,7 @@
 use actix_service::{Service, Transform};
 use actix_web::{
     body::{BoxBody, EitherBody},
+    cookie::Cookie,
     dev::{ServiceRequest, ServiceResponse},
     http::header::{
         ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN,
@@ -10,11 +11,14 @@ use actix_web::{
 };
 use db::entities::user;
 use futures::future::{ok, Ready};
-use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
+use std::{cell::Ref, pin::Pin};
 
-use crate::{lib, utils::state};
+use crate::{
+    lib::{self, auth::AuthCookieExtractor},
+    utils::state,
+};
 
 pub struct AddUser {
     state: state::AppState,
@@ -73,12 +77,8 @@ where
             // Right now auth_cookie = email
             // TODO: encode auth cookie and then decode and extract
             // email
-            println!("method {:?}", req.method());
-            println!("cookies: {:?}", req.cookies());
-            if let Ok(cookie) = lib::auth::extract_auth_cookie(&req) {
-                println!("cookie: {:?}", cookie);
+            if let Ok(cookie) = req.extract_auth_cookie() {
                 if let Ok(user) = state.db.get_user(&cookie).await {
-                    println!("user: {:?}", user);
                     req.extensions_mut()
                         .insert::<db::entities::user::Model>(user.unwrap());
                     let res = service.call(req).await?.map_into_left_body();

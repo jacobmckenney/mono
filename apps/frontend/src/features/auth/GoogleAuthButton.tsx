@@ -16,9 +16,7 @@ export const GoogleAuthButton: Component<Props> = ({ type }) => {
     const getLink = createMutation(() => ({
         mutationFn: async () => {
             const res = await fetch("http://localhost:8080/auth/link/google", {
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                method: "GET",
             });
             if (!res.ok) throw new Error("Failed to fetch URL");
             const json = await res.json();
@@ -30,9 +28,34 @@ export const GoogleAuthButton: Component<Props> = ({ type }) => {
             window.location.href = url;
         },
     }));
+    const getBruh = createMutation(() => ({
+        mutationFn: async () => {
+            const test = await fetch("http://localhost:8080/bruh", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            if (test.redirected) {
+                window.location.href = test.url;
+            }
+        },
+        mutationKey: ["get-bruh"],
+        onSuccess: () => {
+            console.log("Bruh");
+        },
+        onError: (err) => {
+            console.error(err);
+        },
+    }));
     return (
         <>
-            <Button onClick={() => getLink.mutate()}>{type} with Google</Button>
+            <Button disabled={getLink.isPending} onClick={() => getLink.mutate()}>
+                {type} with Google
+            </Button>
+            <Button disabled={getBruh.isPending} onClick={() => getBruh.mutate()}>
+                Get bruh test
+            </Button>
         </>
     );
 };

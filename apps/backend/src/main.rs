@@ -3,7 +3,8 @@ mod lib;
 mod utils;
 
 use actix_web::{
-    get, web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer, Responder, Result,
+    get, http::StatusCode, web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer, Responder,
+    Result,
 };
 use api::{auth, middlewares};
 use db::entities::user;
@@ -21,11 +22,14 @@ async fn main() -> std::io::Result<()> {
     let app_state = state::create_app_state().await;
     let _ = HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(app_state.clone()))
             .wrap(cors::configure_cors())
+            .app_data(web::Data::new(app_state.clone()))
             .service(auth::auth_router())
-            .wrap(middlewares::user_auth::AddUser::new(app_state.clone()))
-            .service(test)
+            .service(
+                web::scope("")
+                    .wrap(middlewares::user_auth::AddUser::new(app_state.clone()))
+                    .service(test),
+            )
             .route("/", web::get().to(HttpResponse::Ok))
     })
     .bind(("127.0.0.1", PORT))?
@@ -36,8 +40,8 @@ async fn main() -> std::io::Result<()> {
 }
 
 #[get("/bruh")]
-async fn test(req: HttpRequest) -> Result<HttpResponse> {
+async fn test(req: HttpRequest) -> Result<impl Responder> {
     let user = get_user(req).unwrap();
-    println!("{:?}", user);
-    return Ok(HttpResponse::Ok().body("bruh"));
+    println!("user in test:{:?}", user);
+    return Ok(web::Json(user));
 }

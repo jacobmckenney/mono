@@ -2,9 +2,13 @@ use actix_service::{Service, Transform};
 use actix_web::{
     body::{BoxBody, EitherBody},
     dev::{ServiceRequest, ServiceResponse},
-    http::header::LOCATION,
+    http::header::{
+        ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN,
+        LOCATION,
+    },
     Error, HttpMessage, HttpResponse,
 };
+use db::entities::user;
 use futures::future::{ok, Ready};
 use std::pin::Pin;
 use std::rc::Rc;
@@ -69,10 +73,16 @@ where
             // Right now auth_cookie = email
             // TODO: encode auth cookie and then decode and extract
             // email
+            println!("method {:?}", req.method());
+            println!("cookies: {:?}", req.cookies());
             if let Ok(cookie) = lib::auth::extract_auth_cookie(&req) {
+                println!("cookie: {:?}", cookie);
                 if let Ok(user) = state.db.get_user(&cookie).await {
-                    req.extensions_mut().insert(user.clone());
+                    println!("user: {:?}", user);
+                    req.extensions_mut()
+                        .insert::<db::entities::user::Model>(user.unwrap());
                     let res = service.call(req).await?.map_into_left_body();
+
                     return Ok(res);
                 }
             };

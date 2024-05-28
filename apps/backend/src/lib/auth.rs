@@ -79,10 +79,11 @@ pub fn build_auth_cookie(user: &user::Model) -> Cookie {
 }
 
 pub fn get_user(req: HttpRequest) -> Result<user::Model, String> {
-    return match req.extensions().get::<user::Model>() {
-        Some(user) => Ok(user.clone()),
-        None => Err("User not found".to_string()),
-    };
+    return req
+        .extensions()
+        .get::<user::Model>()
+        .map(|user| user.clone())
+        .ok_or("User not found".to_string());
 }
 
 impl AuthClient {

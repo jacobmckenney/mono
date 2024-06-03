@@ -1,34 +1,25 @@
 import { Component } from "solid-js";
 import { GoogleAuthButton } from "./features/auth/GoogleAuthButton";
+// import { LogoutButton } from "./features/auth/LogoutButton";
 import { MicrosoftAuthButton } from "./features/auth/MicrosoftAuthButton";
-import { UserProvider, useUser } from "./features/auth/UserLand";
+// import { UserProvider } from "./features/auth/UserLand";
+import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
-import { getUser } from "./lib/hooks/auth";
+import { useUser } from "./lib/hooks/auth";
 
 export const App: Component = () => {
-    const user = getUser();
+    const user = useUser();
     return (
-        <UserProvider>
-            {JSON.stringify(user())}
-            <div class=" w-[100vw]">
+        // <UserProvider>
+        <div class=" w-[100vw]">
+            <div class="flex items-center gap-4">
                 <GoogleAuthButton type="Sign-in" />
                 <MicrosoftAuthButton type="Sign-in" />
+                <LogoutButton />
+                {JSON.stringify(user.data)}
+                <button onClick={() => console.log(user.data?.email)}>print</button>
             </div>
-        </UserProvider>
-    );
-};
-
-const Test: Component = () => {
-    const { user } = useUser();
-
-    if (!user) {
-        return <div>loading...</div>;
-    }
-
-    return (
-        <div>
-            {JSON.stringify({ user })}
-            <h1>{user?.name}</h1>
         </div>
+        // </UserProvider>
     );
 };

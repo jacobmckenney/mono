@@ -1,5 +1,5 @@
 use actix_identity::Identity;
-use actix_web::{get, web, HttpResponse, Responder, Scope};
+use actix_web::{get, post, web, HttpResponse, Responder, Scope};
 
 pub fn auth_router() -> Scope {
     web::scope("/auth")
@@ -16,7 +16,7 @@ pub fn auth_router() -> Scope {
         )
 }
 
-#[get("/logout")]
+#[post("/logout")]
 pub async fn logout(user: Identity) -> impl Responder {
     Identity::logout(user);
     return HttpResponse::Ok().finish();

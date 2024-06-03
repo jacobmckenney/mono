@@ -1,5 +1,4 @@
 import { createQuery } from "@tanstack/solid-query";
-import { createSignal } from "solid-js";
 import { z } from "zod";
 import { ekklesiaApi } from "../ky";
 
@@ -9,24 +8,27 @@ const userSchema = z.object({
 });
 
 export type User = z.infer<typeof userSchema>;
+export const getUserQueryKey = ["get-user"];
 
-export const getUser = () => {
-    let [user, setUser] = createSignal<User | null>(null);
-    createQuery(() => ({
+export const useUser = () => {
+    const query = createQuery(() => ({
         queryFn: async () => {
-            const res = await ekklesiaApi.get("user");
-            console.log(res.ok, res.status, res.statusText, res.url);
-            if (res.ok) {
-                const json = await res.json();
-                const user = userSchema.parse(json);
-                setUser(user);
-                return user;
-            } else {
-                setUser(null);
-                return null;
-            }
+            const res = await ekklesiaApi.get("user", {
+                hooks: {
+                    afterResponse: [
+                        (_input, _options, response) => {
+                            if (response.status === 401 && window.location.pathname !== "/login") {
+                                window.location.href = "/login";
+                            }
+                        },
+                    ],
+                },
+            });
+            const json = await res.json();
+            const user = userSchema.parse(json);
+            return user;
         },
-        queryKey: ["get-user"],
+        queryKey: getUserQueryKey,
     }));
-    return user;
+    return query;
 };

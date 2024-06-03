@@ -25,7 +25,7 @@ pub async fn logout(user: Identity) -> impl Responder {
 mod auth_links {
     use actix_web::{get, web, HttpResponse};
 
-    use crate::utils::state::AppState;
+    use crate::library::state::AppState;
     #[get("/google")]
     async fn get_google_auth_link(data: web::Data<AppState>) -> HttpResponse {
         let url = data.auth_client.google_get_sign_in_link();
@@ -42,16 +42,15 @@ mod auth_links {
 mod auth_callbacks {
 
     use actix_identity::Identity;
-    use actix_session::Session;
     use actix_web::{
         get,
         http::header::LOCATION,
-        web::{self, Data, Query},
+        web::{Data, Query},
         HttpMessage, HttpRequest, HttpResponse, Responder,
     };
     use db::entities::user;
 
-    use crate::{api::middlewares::user_auth::SessionUser, utils::state::AppState};
+    use crate::{api::middlewares::user_auth::SessionUser, library::state::AppState};
 
     #[derive(serde::Deserialize, Debug)]
     struct GoogleCallbackResponse {

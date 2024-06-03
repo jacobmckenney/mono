@@ -1,7 +1,7 @@
+use actix_web::cookie::Key;
 use db::DB;
 
-use crate::lib::auth;
-use auth::{AuthClient, OAuthConfig};
+use super::auth::{AuthClient, OAuthConfig};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -9,10 +9,17 @@ pub struct AppState {
     pub db: DB,
     pub environment: String,
     pub app_name: String,
+    pub encryption_key: Key,
 }
 
 pub async fn create_app_state() -> AppState {
     let environment = std::env::var("ENVIRONMENT").expect("ENVIRONMENT must be set");
+
+    // Session cookie encryption
+    let key_seed = std::env::var("ENCRYPTION_KEY").expect("Encryption key must be set");
+    let key = Key::derive_from(key_seed.as_bytes());
+
+    // OAuth
     let google = OAuthConfig {
         client_id: std::env::var("GOOGLE_OAUTH_CLIENT_ID")
             .expect("GOOGLE_OAUTH_CLIENT_ID must be set"),
@@ -30,6 +37,7 @@ pub async fn create_app_state() -> AppState {
         redirect_uri: std::env::var("MICROSOFT_OAUTH_REDIRECT_URI")
             .expect("MICROSOFT_OAUTH_REDIRECT_URI must be set"),
     };
+    // Db connection
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db = DB::new(db_url).await.unwrap();
 
@@ -39,5 +47,6 @@ pub async fn create_app_state() -> AppState {
         db,
         environment: environment.clone(),
         app_name: String::from("ekklesia"),
+        encryption_key: key,
     }
 }

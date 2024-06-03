@@ -1,5 +1,3 @@
-use actix_web::{cookie::Cookie, dev::ServiceRequest, HttpMessage, HttpRequest};
-use db::entities::user;
 use log::warn;
 use reqwest::{header::AUTHORIZATION, Response};
 use serde::{Deserialize, Serialize};
@@ -57,53 +55,6 @@ pub struct MicrosoftTokenResponse {
 
 const MICROSOFT_OAUTH_BASE: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 const MICROSOFT_TOKEN_BASE: &str = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
-
-const AUTH_COOKIE_KEY: &str = "ekklesia";
-
-pub trait AuthCookieExtractor {
-    fn extract_auth_cookie(&self) -> Result<String, String>;
-}
-
-impl AuthCookieExtractor for ServiceRequest {
-    fn extract_auth_cookie(&self) -> Result<String, String> {
-        return match self
-            .cookie(AUTH_COOKIE_KEY)
-            .map(|cookie| cookie.value().to_string())
-        {
-            Some(value) => Ok(value),
-            None => Err("Auth cookie not found".to_string()),
-        };
-    }
-}
-
-impl AuthCookieExtractor for HttpRequest {
-    fn extract_auth_cookie(&self) -> Result<String, String> {
-        return match self
-            .cookie(AUTH_COOKIE_KEY)
-            .map(|cookie| cookie.value().to_string())
-        {
-            Some(value) => Ok(value),
-            None => Err("Auth cookie not found".to_string()),
-        };
-    }
-}
-
-pub fn build_auth_cookie(user: &user::Model) -> Cookie {
-    // TODO: encode user id and email in cookie
-    return Cookie::build(AUTH_COOKIE_KEY, user.email.clone())
-        .domain("localhost")
-        .path("/")
-        .http_only(true)
-        .finish();
-}
-
-pub fn get_user(req: HttpRequest) -> Result<user::Model, String> {
-    return req
-        .extensions()
-        .get::<user::Model>()
-        .map(|user| user.clone())
-        .ok_or("User not found".to_string());
-}
 
 impl AuthClient {
     pub fn google_get_sign_in_link(&self) -> AuthLink {

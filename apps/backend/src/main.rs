@@ -1,6 +1,7 @@
 mod api;
-mod lib;
-mod utils;
+mod library;
+
+use std::env;
 
 use actix_identity::IdentityMiddleware;
 use actix_session::{
@@ -9,18 +10,16 @@ use actix_session::{
 use actix_web::{
     cookie::{Key, SameSite},
     get,
-    http::StatusCode,
-    web::{self, Data},
-    App, HttpMessage, HttpRequest, HttpResponse, HttpServer, Responder, Result,
+    web::{self},
+    App, HttpResponse, HttpServer, Responder, Result,
 };
 use api::{
     auth,
     middlewares::{self, user_auth::SessionUser},
 };
-use lib::auth::{get_user, AuthCookieExtractor};
-use utils::{
+use library::{
     cors,
-    state::{self, AppState},
+    state::{self},
 };
 
 const NUM_WORKERS: usize = 4;
@@ -31,10 +30,6 @@ const PORT: u16 = 8080;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    println!("Starting server at: http://localhost:{}", PORT);
-
-    // TODO: save this in .env
-    let key = Key::generate();
 
     let app_state = state::create_app_state().await;
     let _ = HttpServer::new(move || {
@@ -42,16 +37,19 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors::configure_cors())
             .wrap(IdentityMiddleware::default())
             .wrap(
-                SessionMiddleware::builder(CookieSessionStore::default(), key.clone())
-                    .cookie_domain(Some(String::from("localhost")))
-                    .cookie_path(String::from("/"))
-                    .cookie_name(app_state.app_name.clone())
-                    .cookie_secure(true)
-                    .cookie_content_security(CookieContentSecurity::Private)
-                    // TODO: configure same site properly depending on the environment
-                    .cookie_same_site(SameSite::None)
-                    .cookie_http_only(false)
-                    .build(),
+                SessionMiddleware::builder(
+                    CookieSessionStore::default(),
+                    app_state.encryption_key.clone(),
+                )
+                .cookie_domain(Some(String::from("localhost")))
+                .cookie_path(String::from("/"))
+                .cookie_name(app_state.app_name.clone())
+                .cookie_secure(true)
+                .cookie_content_security(CookieContentSecurity::Private)
+                // TODO: configure same site properly depending on the environment
+                .cookie_same_site(SameSite::None)
+                .cookie_http_only(false)
+                .build(),
             )
             .app_data(web::Data::new(app_state.clone()))
             .service(auth::auth_router())

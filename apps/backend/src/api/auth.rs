@@ -1,7 +1,9 @@
-use actix_web::{web, Scope};
+use actix_identity::Identity;
+use actix_web::{get, web, HttpResponse, Responder, Scope};
 
 pub fn auth_router() -> Scope {
     web::scope("/auth")
+        .service(logout)
         .service(
             web::scope("/link")
                 .service(auth_links::get_google_auth_link)
@@ -12,6 +14,12 @@ pub fn auth_router() -> Scope {
                 .service(auth_callbacks::google_callback)
                 .service(auth_callbacks::microsoft_callback),
         )
+}
+
+#[get("/logout")]
+pub async fn logout(user: Identity) -> impl Responder {
+    Identity::logout(user);
+    return HttpResponse::Ok().finish();
 }
 
 mod auth_links {
@@ -33,15 +41,17 @@ mod auth_links {
 
 mod auth_callbacks {
 
+    use actix_identity::Identity;
+    use actix_session::Session;
     use actix_web::{
         get,
         http::header::LOCATION,
         web::{self, Data, Query},
-        HttpResponse, Responder,
+        HttpMessage, HttpRequest, HttpResponse, Responder,
     };
     use db::entities::user;
 
-    use crate::{lib::auth::build_auth_cookie, utils::state::AppState};
+    use crate::{api::middlewares::user_auth::SessionUser, utils::state::AppState};
 
     #[derive(serde::Deserialize, Debug)]
     struct GoogleCallbackResponse {
@@ -52,6 +62,7 @@ mod auth_callbacks {
     async fn google_callback(
         query: Query<GoogleCallbackResponse>,
         app: Data<AppState>,
+        request: HttpRequest,
     ) -> impl Responder {
         // Validate user anwd then get
         let tokens = match app.auth_client.google_get_tokens(query.code.as_str()).await {
@@ -76,11 +87,9 @@ mod auth_callbacks {
         if !profile.verified_email {
             return HttpResponse::Unauthorized().body("Email not verified by google");
         }
-        let user = sign_in_or_sign_up(&app.db, &profile.email, &profile.name).await;
-        let auth_cookie = build_auth_cookie(&user);
+        sign_in_or_sign_up(request, &app.db, &profile.email, &profile.name).await;
         return HttpResponse::Found()
-            .append_header((LOCATION, "http://localhost:3000/home"))
-            .cookie(auth_cookie)
+            .append_header((LOCATION, "http://localhost:3000"))
             .finish();
     }
     #[derive(serde::Deserialize, Debug)]
@@ -92,6 +101,7 @@ mod auth_callbacks {
     pub async fn microsoft_callback(
         query: Query<MicrosoftCallbackResponse>,
         app: Data<AppState>,
+        request: HttpRequest,
     ) -> impl Responder {
         // TODO: get sign-in or sign-up type via state
         let profile = app
@@ -102,11 +112,13 @@ mod auth_callbacks {
         // Use preferred_username for security reasons
         let email = profile.preferred_username;
         let name = profile.name;
-        let user = sign_in_or_sign_up(&app.db, &email, &name).await;
-        let auth_cookie = build_auth_cookie(&user);
-        return HttpResponse::Found()
-            .cookie(auth_cookie)
-            .append_header((LOCATION, "http://localhost:3000/home"))
+        println!("Email: {}", email);
+        print!("Name: {}", name);
+        sign_in_or_sign_up(request, &app.db, &email, &name).await;
+        println!("Redirecting");
+
+        return HttpResponse::PermanentRedirect()
+            .append_header((LOCATION, "http://localhost:3000"))
             .finish();
     }
 
@@ -126,11 +138,24 @@ mod auth_callbacks {
         return Ok(user.unwrap());
     }
 
-    async fn sign_in_or_sign_up(db: &db::DB, email: &str, name: &str) -> user::Model {
+    async fn sign_in_or_sign_up(
+        request: HttpRequest,
+        db: &db::DB,
+        email: &str,
+        name: &str,
+    ) -> user::Model {
         let user = match sign_in(db, email).await {
             Some(user) => user,
             None => sign_up(db, email, name).await.unwrap(),
         };
+
+        // Store user in session
+        let session_user = SessionUser {
+            email: user.email.clone(),
+        };
+        let serialized_user = serde_json::to_string::<SessionUser>(&session_user).unwrap();
+        println!("Serialized: {:?}", user);
+        Identity::login(&request.extensions(), serialized_user).unwrap();
         return user;
     }
 }

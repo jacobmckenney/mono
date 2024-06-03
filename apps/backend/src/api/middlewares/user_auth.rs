@@ -1,32 +1,50 @@
 use actix_service::{Service, Transform};
 use actix_web::{
-    body::{BoxBody, EitherBody},
-    cookie::Cookie,
-    dev::{ServiceRequest, ServiceResponse},
-    http::header::{
-        ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN,
-        LOCATION,
-    },
-    Error, HttpMessage, HttpResponse,
+    body::EitherBody,
+    dev::{Payload, ServiceRequest, ServiceResponse},
+    Error, FromRequest, HttpRequest, HttpResponse,
 };
-use db::entities::user;
-use futures::future::{ok, Ready};
+use futures::future::{ok, LocalBoxFuture, Ready};
+use serde::{Deserialize, Serialize};
+use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use std::{cell::Ref, pin::Pin};
 
-use crate::{
-    lib::{self, auth::AuthCookieExtractor},
-    utils::state,
-};
+use actix_identity::Identity;
 
-pub struct AddUser {
-    state: state::AppState,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionUser {
+    pub email: String,
 }
 
+impl FromRequest for SessionUser {
+    type Error = Error;
+    type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
+
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        let identity_future = Identity::from_request(req, payload);
+        let fut = async move {
+            if let Ok(identity) = identity_future.await {
+                if let Ok(id) = identity.id() {
+                    match serde_json::from_str::<SessionUser>(&id) {
+                        Ok(user) => return Ok(user),
+                        Err(_) => {
+                            return Err(actix_web::error::ErrorUnauthorized("Invalid user data"))
+                        }
+                    }
+                }
+            }
+            Err(actix_web::error::ErrorUnauthorized("No user identity"))
+        };
+        Box::pin(fut)
+    }
+}
+
+pub struct AddUser;
+
 impl AddUser {
-    pub fn new(state: state::AppState) -> Self {
-        AddUser { state }
+    pub fn new() -> Self {
+        AddUser {}
     }
 }
 
@@ -45,14 +63,12 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ok(AddUserMiddleware {
             service: Rc::new(service),
-            state: self.state.clone(),
         })
     }
 }
 
 pub struct AddUserMiddleware<S> {
     service: Rc<S>,
-    state: state::AppState,
 }
 
 impl<S, B> Service<ServiceRequest> for AddUserMiddleware<S>
@@ -70,31 +86,26 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let state = self.state.clone();
         let service = Rc::clone(&self.service);
 
         let fut = async move {
-            // Right now auth_cookie = email
-            // TODO: encode auth cookie and then decode and extract
-            // email
-            if let Ok(cookie) = req.extract_auth_cookie() {
-                if let Ok(user) = state.db.get_user(&cookie).await {
-                    req.extensions_mut()
-                        .insert::<db::entities::user::Model>(user.unwrap());
-                    let res = service.call(req).await?.map_into_left_body();
+            // Check if the identity exists
+            let (http_req, mut payload) = req.into_parts();
+            // TODO: handle errors here
+            if let Ok(_) = SessionUser::from_request(&http_req, &mut payload).await {
+                let res = service
+                    .call(ServiceRequest::from_parts(http_req, payload))
+                    .await?
+                    .map_into_left_body();
+                return Ok(res);
+            }
 
-                    return Ok(res);
-                }
-            };
-
+            // Return 401 Unauthorized if identity does not exist or user is not found
             let response = ServiceResponse::new(
-                req.into_parts().0,
-                HttpResponse::Found()
-                    .append_header((LOCATION, "http://localhost:3000/sign-in"))
-                    .finish()
-                    .map_into_right_body(),
+                http_req,
+                HttpResponse::Unauthorized().finish().map_into_right_body(),
             );
-            Ok(response)
+            return Ok(response);
         };
 
         Box::pin(fut)

@@ -2,7 +2,6 @@ import { createMutation } from "@tanstack/solid-query";
 import { Component } from "solid-js";
 import { z } from "zod";
 import { Button } from "../../components/Button";
-import { getUser } from "../../lib/hooks/auth";
 import { ekklesiaApi } from "../../lib/ky";
 
 export const authUrlSchema = z.object({
@@ -26,7 +25,6 @@ export const GoogleAuthButton: Component<Props> = ({ type }) => {
             window.location.href = url;
         },
     }));
-    const user = getUser();
 
     return (
         <>

@@ -7,9 +7,12 @@ use auth::{AuthClient, OAuthConfig};
 pub struct AppState {
     pub auth_client: AuthClient,
     pub db: DB,
+    pub environment: String,
+    pub app_name: String,
 }
 
 pub async fn create_app_state() -> AppState {
+    let environment = std::env::var("ENVIRONMENT").expect("ENVIRONMENT must be set");
     let google = OAuthConfig {
         client_id: std::env::var("GOOGLE_OAUTH_CLIENT_ID")
             .expect("GOOGLE_OAUTH_CLIENT_ID must be set"),
@@ -31,5 +34,10 @@ pub async fn create_app_state() -> AppState {
     let db = DB::new(db_url).await.unwrap();
 
     let auth_client = AuthClient { google, microsoft };
-    AppState { auth_client, db }
+    AppState {
+        auth_client,
+        db,
+        environment: environment.clone(),
+        app_name: String::from("ekklesia"),
+    }
 }

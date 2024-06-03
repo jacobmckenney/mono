@@ -88,16 +88,6 @@ impl AuthCookieExtractor for HttpRequest {
     }
 }
 
-pub fn extract_auth_cookie(req: &ServiceRequest) -> Result<String, String> {
-    let cookie = req
-        .cookie(AUTH_COOKIE_KEY)
-        .map(|cookie| cookie.value().to_string());
-    return match cookie {
-        Some(value) => Ok(value),
-        None => Err("Auth cookie not found".to_string()),
-    };
-}
-
 pub fn build_auth_cookie(user: &user::Model) -> Cookie {
     // TODO: encode user id and email in cookie
     return Cookie::build(AUTH_COOKIE_KEY, user.email.clone())

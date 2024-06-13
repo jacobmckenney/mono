@@ -1,5 +1,5 @@
 use actix_identity::Identity;
-use actix_web::{get, post, web, HttpResponse, Responder, Scope};
+use actix_web::{post, web, HttpResponse, Responder, Scope};
 
 pub fn auth_router() -> Scope {
     web::scope("/auth")
@@ -111,10 +111,7 @@ mod auth_callbacks {
         // Use preferred_username for security reasons
         let email = profile.preferred_username;
         let name = profile.name;
-        println!("Email: {}", email);
-        print!("Name: {}", name);
         sign_in_or_sign_up(request, &app.db, &email, &name).await;
-        println!("Redirecting");
 
         return HttpResponse::PermanentRedirect()
             .append_header((LOCATION, "http://localhost:3000/app"))
@@ -153,7 +150,6 @@ mod auth_callbacks {
             email: user.email.clone(),
         };
         let serialized_user = serde_json::to_string::<SessionUser>(&session_user).unwrap();
-        println!("Serialized: {:?}", user);
         Identity::login(&request.extensions(), serialized_user).unwrap();
         return user;
     }

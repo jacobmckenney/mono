@@ -1,6 +1,6 @@
 import { RouteDefinition, Router } from "@solidjs/router";
 import { Component } from "solid-js";
-import { AuthPage } from "./components/AuthPage";
+import { AuthPage } from "./features/auth/AuthPage";
 import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
 import { AppLayout } from "./layouts/AppLayout";
@@ -25,12 +25,7 @@ const routes = [
         children: [
             {
                 path: "/",
-                component: () => (
-                    <div>
-                        home
-                        <LogoutButton />
-                    </div>
-                ),
+                component: () => <LogoutButton />,
             },
             {
                 path: "/bruh",
@@ -45,20 +40,5 @@ const routes = [
 ] satisfies Array<RouteDefinition>;
 
 export const App: Component = () => {
-    return (
-        <Router>
-            {/* <Route path="auth">
-                <Route path="/sign-in" component={() => <AuthPage type="Sign-in" />} />
-                <Route path="/sign-up" component={() => <AuthPage type="Sign-up" />} />
-            </Route>
-
-            <ProtectedUserRoute path="/">
-                <Route path="/testing">
-                    <div>bruh</div>
-                </Route>
-            </ProtectedUserRoute>
-            <Route path="*404" component={() => <div>404 Not found</div>} /> */}
-            {routes}
-        </Router>
-    );
+    return <Router>{routes}</Router>;
 };

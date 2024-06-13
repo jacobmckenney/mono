@@ -1,14 +1,12 @@
 mod api;
 mod library;
 
-use std::env;
-
 use actix_identity::IdentityMiddleware;
 use actix_session::{
     config::CookieContentSecurity, storage::CookieSessionStore, SessionMiddleware,
 };
 use actix_web::{
-    cookie::{Key, SameSite},
+    cookie::SameSite,
     get,
     web::{self},
     App, HttpResponse, HttpServer, Responder, Result,

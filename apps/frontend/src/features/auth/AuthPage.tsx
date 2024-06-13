@@ -1,8 +1,8 @@
 import { A } from "@solidjs/router";
 import { Component } from "solid-js";
-import { GoogleAuthButton } from "../features/auth/GoogleAuthButton";
-import { MicrosoftAuthButton } from "../features/auth/MicrosoftAuthButton";
-import { createAuthenticationPageGate } from "../lib/hooks/auth";
+import { createAuthenticationPageGate } from "../../lib/hooks/auth";
+import { GoogleAuthButton } from "./GoogleAuthButton";
+import { MicrosoftAuthButton } from "./MicrosoftAuthButton";
 
 interface Props {
     type: "Sign-in" | "Sign-up";
@@ -31,7 +31,7 @@ export const AuthPage: Component<Props> = ({ type }) => {
     return (
         <>
             <div class="w-[100vw] flex flex-row h-[100vh]">
-                <div class="relative w-1/2 bg-white max-lg:hidden">
+                <div class="relative w-1/2 bg-white max-xl:hidden">
                     <div class="absolute top-1/3 right-1/2 translate-x-1/2 flex flex-col items-center gap-3">
                         <h1 class="text-5xl">Ekklesia</h1>
                         <p class="text-center">
@@ -40,8 +40,8 @@ export const AuthPage: Component<Props> = ({ type }) => {
                     </div>
                     <hr />
                 </div>
-                <div class="w-1/2 bg-black relative max-lg:w-full">
-                    <h1 class="relative top-10 left-10 text-4xl text-white lg:hidden">Ekklesia</h1>
+                <div class="w-1/2 bg-black relative max-xl:w-full">
+                    <h1 class="absolute top-10 left-10 text-4xl text-white xl:hidden">Ekklesia</h1>
                     <div class="absolute w-72 top-1/3 right-1/2 translate-x-1/2 flex flex-col gap-6">
                         <h2 class="text-2xl text-white">{info.title}</h2>
                         {/* TODO: support auth with email */}
@@ -58,13 +58,19 @@ export const AuthPage: Component<Props> = ({ type }) => {
                         </div>
                         <div class="flex items-center gap-3"></div>
                         <div class="flex gap-10 items-center">
-                            <GoogleAuthButton type={type} />
-                            <MicrosoftAuthButton type={type} />
+                            <GoogleAuthButton size="xs" theme="white" type={type} />
+                            <MicrosoftAuthButton size="xs" theme="white" type={type} />
                         </div>
                         <div class="text-white text-xs">
-                            Don't have an account? <A href={`/${info.other.href}`}>{info.other.title}</A>
+                            Don't have an account?{" "}
+                            <A class="hover:text-gray-3" href={`/auth/${info.other.href}`}>
+                                {info.other.title}
+                            </A>
                         </div>
                     </div>
+                    <p class="absolute max-sm:right-1/2 max-sm:translate-x-1/2 max-sm:min-w-max bottom-10 right-10 text-white xl:hidden">
+                        A modern bible study tool rooted in <span class="italic">community</span>.
+                    </p>
                 </div>
             </div>
         </>

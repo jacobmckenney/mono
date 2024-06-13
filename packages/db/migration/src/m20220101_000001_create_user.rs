@@ -14,6 +14,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(User::Name).string().not_null())
                     .col(ColumnDef::new(User::Email).string().unique_key().not_null())
+                    .col(ColumnDef::new(User::Image).string())
                     .to_owned(),
             )
             .await
@@ -32,4 +33,5 @@ enum User {
     Id,
     Name,
     Email,
+    Image,
 }

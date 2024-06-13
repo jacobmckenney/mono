@@ -1,13 +1,13 @@
 import { createMutation } from "@tanstack/solid-query";
 import { Component } from "solid-js";
-import { Button } from "../../components/Button";
+import { Button, ButtonProps } from "../../components/Button";
 import { authUrlSchema } from "./GoogleAuthButton";
 
-interface Props {
+interface Props extends ButtonProps {
     type: "Sign-in" | "Sign-up";
 }
 
-export const MicrosoftAuthButton: Component<Props> = ({ type }) => {
+export const MicrosoftAuthButton: Component<Props> = ({ type, ...rest }) => {
     const getLink = createMutation(() => ({
         mutationFn: async () => {
             const res = await fetch("http://localhost:8080/auth/link/microsoft", {
@@ -23,7 +23,9 @@ export const MicrosoftAuthButton: Component<Props> = ({ type }) => {
     }));
     return (
         <>
-            <Button onClick={() => getLink.mutate()}>{type} with Microsoft</Button>
+            <Button {...rest} onClick={() => getLink.mutate()}>
+                {type} with Microsoft
+            </Button>
         </>
     );
 };

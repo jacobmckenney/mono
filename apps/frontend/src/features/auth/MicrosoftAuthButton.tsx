@@ -20,9 +20,6 @@ export const MicrosoftAuthButton: Component<Props> = ({ type }) => {
         onSuccess: (url) => {
             window.location.href = url;
         },
-        onError: (err) => {
-            console.error(err);
-        },
     }));
     return (
         <>

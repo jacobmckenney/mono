@@ -8,7 +8,7 @@ export const LogoutButton: Component = () => {
     const queryClient = useQueryClient();
     const logoutMutation = createMutation(() => ({
         mutationFn: async () => {
-            const res = await ekklesiaApi.post("auth/logout");
+            await ekklesiaApi.post("auth/logout");
         },
         mutationKey: ["logout"],
         onSuccess: () => {

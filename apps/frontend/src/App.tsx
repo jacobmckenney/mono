@@ -1,27 +1,64 @@
-import { Route, Router } from "@solidjs/router";
+import { RouteDefinition, Router } from "@solidjs/router";
 import { Component } from "solid-js";
+import { AuthPage } from "./components/AuthPage";
 import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
-import { SignInPage } from "./pages/SignIn";
-import { SignUpPage } from "./pages/SignUp";
-import { AuthenticateRoute } from "./routing/AuthenticateRoute";
-import { ProtectedUserRoute } from "./routing/ProtectedUserRoute";
+import { AppLayout } from "./layouts/AppLayout";
 
-const authRoutes = ["sign-in", "sign-up"];
+const routes = [
+    {
+        path: "/auth",
+        children: [
+            {
+                path: "/sign-in",
+                component: () => <AuthPage type="Sign-in" />,
+            },
+            {
+                path: "/sign-up",
+                component: () => <AuthPage type="Sign-up" />,
+            },
+        ],
+    },
+    {
+        path: "/app",
+        component: ({ children }) => <AppLayout>{children}</AppLayout>,
+        children: [
+            {
+                path: "/",
+                component: () => (
+                    <div>
+                        home
+                        <LogoutButton />
+                    </div>
+                ),
+            },
+            {
+                path: "/bruh",
+                component: () => <div>bruh</div>,
+            },
+        ],
+    },
+    {
+        path: "*404",
+        component: () => <div>404 Not found</div>,
+    },
+] satisfies Array<RouteDefinition>;
 
 export const App: Component = () => {
     return (
         <Router>
-            <AuthenticateRoute path="/sign-in">
-                <SignInPage />
-            </AuthenticateRoute>
-            <Route path="/sign-up" component={() => <SignUpPage />} />
+            {/* <Route path="auth">
+                <Route path="/sign-in" component={() => <AuthPage type="Sign-in" />} />
+                <Route path="/sign-up" component={() => <AuthPage type="Sign-up" />} />
+            </Route>
+
             <ProtectedUserRoute path="/">
-                <div class="bg-black">
-                    hello world <LogoutButton />
-                </div>
+                <Route path="/testing">
+                    <div>bruh</div>
+                </Route>
             </ProtectedUserRoute>
-            <Route path="*404" component={() => <div>404 Not found</div>} />
+            <Route path="*404" component={() => <div>404 Not found</div>} /> */}
+            {routes}
         </Router>
     );
 };

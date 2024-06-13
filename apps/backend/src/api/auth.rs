@@ -88,7 +88,7 @@ mod auth_callbacks {
         }
         sign_in_or_sign_up(request, &app.db, &profile.email, &profile.name).await;
         return HttpResponse::Found()
-            .append_header((LOCATION, "http://localhost:3000"))
+            .append_header((LOCATION, "http://localhost:3000/app"))
             .finish();
     }
     #[derive(serde::Deserialize, Debug)]
@@ -117,7 +117,7 @@ mod auth_callbacks {
         println!("Redirecting");
 
         return HttpResponse::PermanentRedirect()
-            .append_header((LOCATION, "http://localhost:3000"))
+            .append_header((LOCATION, "http://localhost:3000/app"))
             .finish();
     }
 

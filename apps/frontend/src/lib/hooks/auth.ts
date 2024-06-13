@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
+import { createEffect } from "solid-js";
 import { z } from "zod";
 import { ekklesiaApi } from "../ky";
 
@@ -19,8 +20,8 @@ export const useUser = () => {
                 hooks: {
                     afterResponse: [
                         (_input, _options, response) => {
-                            if (response.status === 401 && location.pathname !== "/sign-in") {
-                                navigate("/sign-in", { replace: true });
+                            if (response.status === 401 && location.pathname !== "/auth/sign-in") {
+                                navigate("/auth/sign-in", { replace: true });
                             }
                         },
                     ],
@@ -33,4 +34,23 @@ export const useUser = () => {
         queryKey: getUserQueryKey,
     }));
     return query;
+};
+
+export const createAuthenticationPageGate = () => {
+    const user = useUser();
+
+    createEffect(() => {
+        if (!user.isLoading && user.data) {
+            location.href = "/app";
+        }
+    });
+};
+
+export const createAuthenticatedPageGate = () => {
+    const user = useUser();
+    createEffect(() => {
+        if (!user.isLoading && !user.data) {
+            location.href = "/auth/sign-in";
+        }
+    });
 };

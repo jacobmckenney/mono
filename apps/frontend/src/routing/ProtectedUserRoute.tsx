@@ -13,7 +13,7 @@ const UserLand: Component<{ children: JSX.Element }> = (props) => {
 
     createEffect(() => {
         if (!user.isLoading && !user.data) {
-            location.href = "/sign-in";
+            location.href = "/auth/sign-in";
         }
     });
     return (

@@ -1,9 +1,19 @@
 use actix_identity::Identity;
-use actix_web::{post, web, HttpResponse, Responder, Scope};
+use actix_web::{
+    cookie::Cookie,
+    http::header::{ACCESS_CONTROL_ALLOW_ORIGIN, LOCATION},
+    post,
+    web::{self, Data},
+    HttpMessage, HttpRequest, HttpResponse, Responder, Scope,
+};
+use auth_callbacks::sign_in;
+
+use crate::{api::middlewares::user_auth::SessionUser, library::state::AppState};
 
 pub fn auth_router() -> Scope {
     web::scope("/auth")
         .service(logout)
+        .service(email_login)
         .service(
             web::scope("/link")
                 .service(auth_links::get_google_auth_link)
@@ -20,6 +30,41 @@ pub fn auth_router() -> Scope {
 pub async fn logout(user: Identity) -> impl Responder {
     Identity::logout(user);
     return HttpResponse::Ok().finish();
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+struct EmailEndpointBody {
+    email: String,
+}
+
+#[post("email")]
+pub async fn email_login(
+    info: web::Json<EmailEndpointBody>,
+    app: Data<AppState>,
+    request: HttpRequest,
+) -> impl Responder {
+    if (request.method() == "OPTIONS") {
+        return HttpResponse::Ok()
+            // .append_header((ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"))
+            .finish();
+    }
+    // let user = sign_in(&app.db, &info.email).await;
+    // if user.is_none() {
+    //     return HttpResponse::Unauthorized().body("User not found");
+    // }
+
+    let serialized_user = serde_json::to_string::<SessionUser>(&SessionUser {
+        email: String::from("jake.g.mckenney@gmail.com"),
+    })
+    .unwrap();
+
+    Identity::login(&request.extensions(), serialized_user).unwrap();
+    // Identity::login(&request.extensions(), serialized_user).unwrap();
+    // TODO: login
+    return HttpResponse::Found()
+        .append_header((ACCESS_CONTROL_ALLOW_ORIGIN, "localhost"))
+        .append_header((LOCATION, "http://localhost:3000/app"))
+        .finish();
 }
 
 mod auth_links {
@@ -125,7 +170,7 @@ mod auth_callbacks {
             .finish();
     }
 
-    async fn sign_in(db: &db::DB, email: &str) -> Option<user::Model> {
+    pub async fn sign_in(db: &db::DB, email: &str) -> Option<user::Model> {
         let lowercase_email = email.to_lowercase();
         let user = db.get_user(&lowercase_email).await.unwrap();
         return user;

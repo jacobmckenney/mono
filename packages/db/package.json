@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "build": "cargo build",
+        "build": "cargo build --manifest-path client/Cargo.toml",
         "db:migrate": "sea-orm-cli migrate",
         "db:generate": "dotenv sea-orm-cli generate entity -u $DATABASE_URL -o client/src/entities"
     },

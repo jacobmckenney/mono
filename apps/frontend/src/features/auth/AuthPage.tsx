@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import { Component } from "solid-js";
+import { Button } from "../../components/Button";
 import { createAuthenticationPageGate } from "../../lib/hooks/auth";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { MicrosoftAuthButton } from "./MicrosoftAuthButton";
@@ -45,12 +46,35 @@ export const AuthPage: Component<Props> = ({ type }) => {
                     <div class="absolute w-72 top-1/3 right-1/2 translate-x-1/2 flex flex-col gap-6">
                         <h2 class="text-2xl text-white">{info.title}</h2>
                         {/* TODO: support auth with email */}
-                        <div class="flex flex-col gap-0.5 w-full">
+                        <form
+                            onSubmit={async (data) => {
+                                data.preventDefault();
+                                const formData = new FormData(data.currentTarget);
+                                const val = formData.get(`email-${type}`) as string;
+                                const res = await fetch("http://localhost:8080/auth/email", {
+                                    method: "POST",
+                                    body: JSON.stringify({
+                                        email: val,
+                                    }),
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    credentials: "include",
+                                });
+                                console.log(res.headers);
+                                console.log(res.status);
+                                // console.log(await res.json());
+                            }}
+                            class="flex flex-col gap-0.5 w-full"
+                        >
                             <label for={`email-${type}`} class="text-white">
                                 Email
                             </label>
-                            <input id={`email-${type}`} type="email" />
-                        </div>
+                            <input id={`email-${type}`} name={`email-${type}`} type="email" />
+                            <Button type="submit" theme="white">
+                                Login
+                            </Button>
+                        </form>
                         <div class="w-full flex gap-1.5 items-center justify-center">
                             <hr class="w-1/2 border-[0.5px] border-white" />
                             <p class="text-white">or</p>

@@ -1,5 +1,5 @@
 import * as Kobalte from "@kobalte/core/button";
-import { cva, VariantProps } from "class-variance-authority";
+import { VariantProps, cva } from "class-variance-authority";
 import { Component, JSX, JSXElement, children as solidChildren } from "solid-js";
 
 const buttonVariants = cva(

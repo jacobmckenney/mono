@@ -7,4 +7,5 @@ export const ekklesiaApi = ky.extend({
     headers: {
         "Content-Type": "application/json",
     },
+    // redirect: "follow",
 });

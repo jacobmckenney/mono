@@ -1,12 +1,13 @@
 use actix_identity::Identity;
 use actix_web::{
     cookie::Cookie,
-    http::header::{ACCESS_CONTROL_ALLOW_ORIGIN, LOCATION},
+    get,
+    http::header::{ACCESS_CONTROL_ALLOW_ORIGIN, LOCATION, SET_COOKIE},
     post,
-    web::{self, Data},
+    web::{self, Data, Query},
     HttpMessage, HttpRequest, HttpResponse, Responder, Scope,
 };
-use auth_callbacks::sign_in;
+use auth_callbacks::{sign_in, sign_in_or_sign_up};
 
 use crate::{api::middlewares::user_auth::SessionUser, library::state::AppState};
 
@@ -43,28 +44,8 @@ pub async fn email_login(
     app: Data<AppState>,
     request: HttpRequest,
 ) -> impl Responder {
-    if (request.method() == "OPTIONS") {
-        return HttpResponse::Ok()
-            // .append_header((ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"))
-            .finish();
-    }
-    // let user = sign_in(&app.db, &info.email).await;
-    // if user.is_none() {
-    //     return HttpResponse::Unauthorized().body("User not found");
-    // }
-
-    let serialized_user = serde_json::to_string::<SessionUser>(&SessionUser {
-        email: String::from("jake.g.mckenney@gmail.com"),
-    })
-    .unwrap();
-
-    Identity::login(&request.extensions(), serialized_user).unwrap();
-    // Identity::login(&request.extensions(), serialized_user).unwrap();
-    // TODO: login
-    return HttpResponse::Found()
-        .append_header((ACCESS_CONTROL_ALLOW_ORIGIN, "localhost"))
-        .append_header((LOCATION, "http://localhost:3000/app"))
-        .finish();
+    sign_in_or_sign_up(request, &app.db, &info.email, None, None).await;
+    return HttpResponse::Ok().finish();
 }
 
 mod auth_links {
@@ -135,7 +116,7 @@ mod auth_callbacks {
             request,
             &app.db,
             &profile.email,
-            &profile.name,
+            Some(&profile.name),
             Some(&profile.picture),
         )
         .await;
@@ -163,7 +144,7 @@ mod auth_callbacks {
         // Use preferred_username for security reasons
         let email = profile.preferred_username;
         let name = profile.name;
-        sign_in_or_sign_up(request, &app.db, &email, &name, None).await;
+        sign_in_or_sign_up(request, &app.db, &email, Some(&name), None).await;
 
         return HttpResponse::PermanentRedirect()
             .append_header((LOCATION, "http://localhost:3000/app"))
@@ -191,16 +172,21 @@ mod auth_callbacks {
         return Ok(user.unwrap());
     }
 
-    async fn sign_in_or_sign_up(
+    pub async fn sign_in_or_sign_up(
         request: HttpRequest,
         db: &db::DB,
         email: &str,
-        name: &str,
+        name: Option<&str>,
         image: Option<&str>,
-    ) -> user::Model {
+    ) -> Option<user::Model> {
         let user = match sign_in(db, email).await {
             Some(user) => user,
-            None => sign_up(db, email, name, image).await.unwrap(),
+            None => {
+                if name.is_none() {
+                    return None;
+                }
+                sign_up(db, email, name.unwrap(), image).await.unwrap()
+            }
         };
 
         // Store user in session
@@ -208,7 +194,8 @@ mod auth_callbacks {
             email: user.email.clone(),
         };
         let serialized_user = serde_json::to_string::<SessionUser>(&session_user).unwrap();
+        println!("User: {:?}", serialized_user);
         Identity::login(&request.extensions(), serialized_user).unwrap();
-        return user;
+        return Some(user);
     }
 }

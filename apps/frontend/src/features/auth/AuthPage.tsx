@@ -1,7 +1,8 @@
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { Component } from "solid-js";
 import { Button } from "../../components/Button";
 import { createAuthenticationPageGate } from "../../lib/hooks/auth";
+import { ekklesiaApi } from "../../lib/ky";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { MicrosoftAuthButton } from "./MicrosoftAuthButton";
 
@@ -28,6 +29,7 @@ const pageInfo = {
 
 export const AuthPage: Component<Props> = ({ type }) => {
     createAuthenticationPageGate();
+    const navigate = useNavigate();
     const info = pageInfo[type];
     return (
         <>
@@ -51,19 +53,12 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 data.preventDefault();
                                 const formData = new FormData(data.currentTarget);
                                 const val = formData.get(`email-${type}`) as string;
-                                const res = await fetch("http://localhost:8080/auth/email", {
-                                    method: "POST",
+                                await ekklesiaApi.post(`auth/email`, {
                                     body: JSON.stringify({
                                         email: val,
                                     }),
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                    },
-                                    credentials: "include",
                                 });
-                                console.log(res.headers);
-                                console.log(res.status);
-                                // console.log(await res.json());
+                                navigate("/app");
                             }}
                             class="flex flex-col gap-0.5 w-full"
                         >

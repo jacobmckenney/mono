@@ -88,6 +88,7 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 <GoogleAuthButton size="xs" theme="white" type={type} />
                                 <MicrosoftAuthButton size="xs" theme="white" type={type} />
                             </div>
+                            <p class="text-white">CHANGE</p>
                             <div class="text-white text-xs">
                                 Don't have an account?{" "}
                                 <A class="hover:text-gray-3" replace href={`/auth/${info.other.href}`}>

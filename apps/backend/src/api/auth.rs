@@ -86,7 +86,14 @@ mod auth_callbacks {
         if !profile.verified_email {
             return HttpResponse::Unauthorized().body("Email not verified by google");
         }
-        sign_in_or_sign_up(request, &app.db, &profile.email, &profile.name).await;
+        sign_in_or_sign_up(
+            request,
+            &app.db,
+            &profile.email,
+            &profile.name,
+            Some(&profile.picture),
+        )
+        .await;
         return HttpResponse::Found()
             .append_header((LOCATION, "http://localhost:3000/app"))
             .finish();
@@ -111,7 +118,7 @@ mod auth_callbacks {
         // Use preferred_username for security reasons
         let email = profile.preferred_username;
         let name = profile.name;
-        sign_in_or_sign_up(request, &app.db, &email, &name).await;
+        sign_in_or_sign_up(request, &app.db, &email, &name, None).await;
 
         return HttpResponse::PermanentRedirect()
             .append_header((LOCATION, "http://localhost:3000/app"))
@@ -124,11 +131,16 @@ mod auth_callbacks {
         return user;
     }
 
-    async fn sign_up(db: &db::DB, email: &str, name: &str) -> Result<user::Model, String> {
+    async fn sign_up(
+        db: &db::DB,
+        email: &str,
+        name: &str,
+        image: Option<&str>,
+    ) -> Result<user::Model, String> {
         let lowercase_email = email.to_lowercase();
         let mut user = db.get_user(&lowercase_email).await.unwrap();
         if user.is_none() {
-            db.insert_user(name, &lowercase_email).await.unwrap();
+            db.insert_user(name, &lowercase_email, image).await.unwrap();
         }
         user = db.get_user(&lowercase_email).await.unwrap();
         return Ok(user.unwrap());
@@ -139,10 +151,11 @@ mod auth_callbacks {
         db: &db::DB,
         email: &str,
         name: &str,
+        image: Option<&str>,
     ) -> user::Model {
         let user = match sign_in(db, email).await {
             Some(user) => user,
-            None => sign_up(db, email, name).await.unwrap(),
+            None => sign_up(db, email, name, image).await.unwrap(),
         };
 
         // Store user in session

@@ -1,5 +1,5 @@
 import { Component, JSX, children } from "solid-js";
-import { createAuthenticatedPageGate } from "../lib/hooks/auth";
+import { createAuthenticatedPageGate, useUser } from "../lib/hooks/auth";
 
 interface Props {
     children: JSX.Element;
@@ -8,6 +8,7 @@ interface Props {
 export const AppLayout: Component<Props> = (props) => {
     createAuthenticatedPageGate();
     const c = children(() => props.children);
+    const user = useUser();
     return (
         <div>
             <div class="bg-black dark:bg-white h-10"></div>

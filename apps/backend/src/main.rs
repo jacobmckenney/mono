@@ -8,7 +8,7 @@ use actix_session::{
 use actix_web::{
     cookie::SameSite,
     get,
-    web::{self},
+    web::{self, Data},
     App, HttpResponse, HttpServer, Responder, Result,
 };
 use api::{
@@ -17,7 +17,7 @@ use api::{
 };
 use library::{
     cors,
-    state::{self},
+    state::{self, AppState},
 };
 
 const NUM_WORKERS: usize = 4;
@@ -66,7 +66,7 @@ async fn main() -> std::io::Result<()> {
 }
 
 #[get("/user")]
-async fn find_user(user: SessionUser) -> Result<impl Responder> {
-    println!("User: {:?}", user);
+async fn find_user(user: SessionUser, app: Data<AppState>) -> Result<impl Responder> {
+    let user = app.db.get_user(&user.email).await.unwrap().unwrap();
     return Ok(web::Json(user));
 }

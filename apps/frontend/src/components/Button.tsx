@@ -5,7 +5,7 @@ import { Component, JSX, JSXElement, children as solidChildren } from "solid-js"
 const buttonVariants = cva(
     [
         "border",
-        "rounded-sm",
+        "rounded-md",
         "shadow-sm",
         "stack",
         "font-semibold",

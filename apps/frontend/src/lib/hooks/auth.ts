@@ -23,7 +23,11 @@ export const useUser = () => {
                 hooks: {
                     afterResponse: [
                         (_input, _options, response) => {
-                            if (response.status === 401 && location.pathname !== "/auth/sign-in") {
+                            if (
+                                response.status === 401 &&
+                                !["/auth/sign-in", "/auth/sign-up"].includes(location.pathname)
+                            ) {
+                                console.log("re-routing");
                                 navigate("/auth/sign-in", { replace: true });
                             }
                         },

@@ -1,15 +1,12 @@
 use actix_identity::Identity;
 use actix_web::{
-    cookie::Cookie,
-    get,
-    http::header::{ACCESS_CONTROL_ALLOW_ORIGIN, LOCATION, SET_COOKIE},
     post,
-    web::{self, Data, Query},
-    HttpMessage, HttpRequest, HttpResponse, Responder, Scope,
+    web::{self, Data},
+    HttpRequest, HttpResponse, Responder, Scope,
 };
-use auth_callbacks::{sign_in, sign_in_or_sign_up};
+use auth_callbacks::sign_in_or_sign_up;
 
-use crate::{api::middlewares::user_auth::SessionUser, library::state::AppState};
+use crate::library::state::AppState;
 
 pub fn auth_router() -> Scope {
     web::scope("/auth")
@@ -44,8 +41,11 @@ pub async fn email_login(
     app: Data<AppState>,
     request: HttpRequest,
 ) -> impl Responder {
-    sign_in_or_sign_up(request, &app.db, &info.email, None, None).await;
-    return HttpResponse::Ok().finish();
+    let user = sign_in_or_sign_up(request, &app.db, &info.email, None, None).await;
+    match user {
+        Some(_) => HttpResponse::Ok().finish(),
+        None => HttpResponse::Unauthorized().finish(),
+    }
 }
 
 mod auth_links {
@@ -112,7 +112,7 @@ mod auth_callbacks {
         if !profile.verified_email {
             return HttpResponse::Unauthorized().body("Email not verified by google");
         }
-        sign_in_or_sign_up(
+        let user = sign_in_or_sign_up(
             request,
             &app.db,
             &profile.email,
@@ -120,9 +120,12 @@ mod auth_callbacks {
             Some(&profile.picture),
         )
         .await;
-        return HttpResponse::Found()
-            .append_header((LOCATION, "http://localhost:3000/app"))
-            .finish();
+        return match user {
+            Some(_) => HttpResponse::Found()
+                .append_header((LOCATION, "http://localhost:3000/app"))
+                .finish(),
+            None => HttpResponse::Unauthorized().finish(),
+        };
     }
     #[derive(serde::Deserialize, Debug)]
     struct MicrosoftCallbackResponse {
@@ -144,11 +147,14 @@ mod auth_callbacks {
         // Use preferred_username for security reasons
         let email = profile.preferred_username;
         let name = profile.name;
-        sign_in_or_sign_up(request, &app.db, &email, Some(&name), None).await;
+        let user = sign_in_or_sign_up(request, &app.db, &email, Some(&name), None).await;
 
-        return HttpResponse::PermanentRedirect()
-            .append_header((LOCATION, "http://localhost:3000/app"))
-            .finish();
+        return match user {
+            Some(_) => HttpResponse::Found()
+                .append_header((LOCATION, "http://localhost:3000/app"))
+                .finish(),
+            None => HttpResponse::Unauthorized().finish(),
+        };
     }
 
     pub async fn sign_in(db: &db::DB, email: &str) -> Option<user::Model> {
@@ -160,13 +166,13 @@ mod auth_callbacks {
     async fn sign_up(
         db: &db::DB,
         email: &str,
-        name: &str,
+        name: Option<&str>,
         image: Option<&str>,
     ) -> Result<user::Model, String> {
         let lowercase_email = email.to_lowercase();
         let mut user = db.get_user(&lowercase_email).await.unwrap();
         if user.is_none() {
-            db.insert_user(name, &lowercase_email, image).await.unwrap();
+            db.insert_user(&lowercase_email, name, image).await.unwrap();
         }
         user = db.get_user(&lowercase_email).await.unwrap();
         return Ok(user.unwrap());
@@ -179,14 +185,12 @@ mod auth_callbacks {
         name: Option<&str>,
         image: Option<&str>,
     ) -> Option<user::Model> {
+        if email.is_empty() {
+            return None;
+        }
         let user = match sign_in(db, email).await {
             Some(user) => user,
-            None => {
-                if name.is_none() {
-                    return None;
-                }
-                sign_up(db, email, name.unwrap(), image).await.unwrap()
-            }
+            None => sign_up(db, email, name, image).await.unwrap(),
         };
 
         // Store user in session
@@ -194,7 +198,6 @@ mod auth_callbacks {
             email: user.email.clone(),
         };
         let serialized_user = serde_json::to_string::<SessionUser>(&session_user).unwrap();
-        println!("User: {:?}", serialized_user);
         Identity::login(&request.extensions(), serialized_user).unwrap();
         return Some(user);
     }

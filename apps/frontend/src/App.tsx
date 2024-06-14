@@ -5,7 +5,7 @@ import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
 import { AppLayout } from "./layouts/AppLayout";
 
-const routes = [
+export const appRoutes = [
     {
         path: "/auth",
         children: [
@@ -40,5 +40,5 @@ const routes = [
 ] satisfies Array<RouteDefinition>;
 
 export const App: Component = () => {
-    return <Router>{routes}</Router>;
+    return <Router>{appRoutes}</Router>;
 };

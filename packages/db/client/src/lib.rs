@@ -16,20 +16,18 @@ impl DB {
 
     pub async fn insert_user(
         &self,
-        name: &str,
         email: &str,
+        name: Option<&str>,
         image: Option<&str>,
     ) -> Result<(), DbErr> {
-        let dbImage: Option<String> = match image {
-            Some(image) => Some(String::from(image)),
-            None => None,
-        };
+        let db_image = image.map(|s| s.to_string());
+        let db_name = name.map(|s| s.to_string());
         let new_user = user::ActiveModel {
             // TODO: generate utility for creating unique ids
             id: Set(String::from(format!("user_{}", Uuid::new_v4()))),
-            name: Set(String::from(name)),
+            name: Set(db_name),
             email: Set(String::from(email)),
-            image: Set(dbImage),
+            image: Set(db_image),
             ..Default::default()
         };
         User::insert(new_user).exec(&self.connection).await?;

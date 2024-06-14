@@ -20,7 +20,7 @@ const routes = [
         ],
     },
     {
-        path: "/app",
+        path: ["/", "/app"],
         component: ({ children }) => <AppLayout>{children}</AppLayout>,
         children: [
             {

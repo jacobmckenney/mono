@@ -33,7 +33,7 @@ async fn main() -> std::io::Result<()> {
     let environment = app_state.environment.clone();
     let _ = HttpServer::new(move || {
         App::new()
-            .wrap(cors::configure_cors())
+            .wrap(cors::configure_cors(app_state.environment.clone().as_str()))
             .wrap(IdentityMiddleware::default())
             .wrap(match app_state.environment.clone().as_str() {
                 "production" => SessionMiddleware::builder(
@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
             )
     })
     .bind((
-        match environment.as_str() {
+        match environment.clone().as_str() {
             "production" => "0.0.0.0",
             _ => "127.0.0.1",
         },

@@ -9,7 +9,7 @@ const userSchema = z.object({
     id: z.string(),
     email: z.string(),
     image: z.string().nullable(),
-    name: z.string(),
+    name: z.string().nullable(),
 });
 
 export const getUserQueryKey = ["get-user"];

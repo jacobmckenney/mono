@@ -4,6 +4,7 @@ import { AuthPage } from "./features/auth/AuthPage";
 import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
 import { AppLayout } from "./layouts/AppLayout";
+import { useUser } from "./lib/hooks/auth";
 
 export const appRoutes = [
     {
@@ -25,7 +26,12 @@ export const appRoutes = [
         children: [
             {
                 path: "/",
-                component: () => <LogoutButton />,
+                component: () => (
+                    <div>
+                        <LogoutButton />
+                        <Test />
+                    </div>
+                ),
             },
             {
                 path: "/bruh",
@@ -41,4 +47,9 @@ export const appRoutes = [
 
 export const App: Component = () => {
     return <Router>{appRoutes}</Router>;
+};
+
+const Test: Component = () => {
+    const user = useUser();
+    return <div class="text-white">hello {user.data?.name}</div>;
 };

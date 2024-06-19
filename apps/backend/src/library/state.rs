@@ -10,10 +10,13 @@ pub struct AppState {
     pub environment: String,
     pub app_name: String,
     pub encryption_key: Key,
+    pub app_auth_redirect_url: String,
 }
 
 pub async fn create_app_state() -> AppState {
     let environment = std::env::var("ENVIRONMENT").expect("ENVIRONMENT must be set");
+    let app_auth_redirect_url =
+        std::env::var("APP_AUTH_REDIRECT_URL").expect("APP_AUTH_REDIRECT_URL must be set");
 
     // Session cookie encryption
     let key_seed = std::env::var("ENCRYPTION_KEY").expect("Encryption key must be set");
@@ -47,6 +50,7 @@ pub async fn create_app_state() -> AppState {
         db,
         environment: environment.clone(),
         app_name: String::from("ekklesia"),
+        app_auth_redirect_url,
         encryption_key: key,
     }
 }

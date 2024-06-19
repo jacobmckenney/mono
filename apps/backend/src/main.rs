@@ -30,12 +30,25 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     let app_state = state::create_app_state().await;
+    let environment = app_state.environment.clone();
     let _ = HttpServer::new(move || {
         App::new()
             .wrap(cors::configure_cors())
             .wrap(IdentityMiddleware::default())
-            .wrap(
-                SessionMiddleware::builder(
+            .wrap(match app_state.environment.clone().as_str() {
+                "production" => SessionMiddleware::builder(
+                    CookieSessionStore::default(),
+                    app_state.encryption_key.clone(),
+                )
+                .cookie_domain(Some(String::from("app.ekklesia.dev")))
+                .cookie_path(String::from("/"))
+                .cookie_name(app_state.app_name.clone())
+                .cookie_secure(true)
+                .cookie_content_security(CookieContentSecurity::Private)
+                .cookie_same_site(SameSite::None)
+                .cookie_http_only(false)
+                .build(),
+                _ => SessionMiddleware::builder(
                     CookieSessionStore::default(),
                     app_state.encryption_key.clone(),
                 )
@@ -48,7 +61,7 @@ async fn main() -> std::io::Result<()> {
                 .cookie_same_site(SameSite::None)
                 .cookie_http_only(false)
                 .build(),
-            )
+            })
             .app_data(web::Data::new(app_state.clone()))
             .service(auth::auth_router())
             .service(
@@ -58,7 +71,13 @@ async fn main() -> std::io::Result<()> {
                     .route("/", web::get().to(HttpResponse::Ok)),
             )
     })
-    .bind(("0.0.0.0", PORT))?
+    .bind((
+        match environment.as_str() {
+            "production" => "0.0.0.0",
+            _ => "127.0.0.1",
+        },
+        PORT,
+    ))?
     .workers(NUM_WORKERS)
     .run()
     .await;

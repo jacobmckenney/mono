@@ -122,7 +122,7 @@ mod auth_callbacks {
         .await;
         return match user {
             Some(_) => HttpResponse::Found()
-                .append_header((LOCATION, "http://localhost:3000/app"))
+                .append_header((LOCATION, app.app_auth_redirect_url.as_str()))
                 .finish(),
             None => HttpResponse::Unauthorized().finish(),
         };
@@ -151,7 +151,7 @@ mod auth_callbacks {
 
         return match user {
             Some(_) => HttpResponse::Found()
-                .append_header((LOCATION, "http://localhost:3000/app"))
+                .append_header((LOCATION, app.app_auth_redirect_url.as_str()))
                 .finish(),
             None => HttpResponse::Unauthorized().finish(),
         };

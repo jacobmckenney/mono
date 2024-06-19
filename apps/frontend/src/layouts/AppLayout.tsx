@@ -26,7 +26,7 @@ const UserProfile = () => {
 
     return (
         <div>
-            <img src={user.data?.image || ""} alt={user.data?.name} class="h-10 w-10 rounded-full" />
+            <img src={user.data?.image || ""} alt={user.data?.name ?? ""} class="h-10 w-10 rounded-full" />
         </div>
     );
 };

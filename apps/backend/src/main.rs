@@ -3,7 +3,7 @@ mod library;
 
 use actix_identity::{Identity, IdentityMiddleware};
 use actix_session::{
-    config::CookieContentSecurity, storage::CookieSessionStore, SessionMiddleware,
+    config::CookieContentSecurity, storage::CookieSessionStore, Session, SessionMiddleware,
 };
 use actix_web::{
     cookie::SameSite,
@@ -101,11 +101,23 @@ async fn set_cookie() -> impl Responder {
 }
 
 #[get("set-session")]
-async fn set_session(req: HttpRequest) -> impl Responder {
-    let session_user = SessionUser {
-        email: String::from("jake.g.mckenney@gmail.com"),
-    };
-    let serialize_session_user = serde_json::to_string(&session_user).unwrap();
-    Identity::login(&req.extensions(), serialize_session_user).unwrap();
+async fn set_session(req: HttpRequest, session: Session) -> impl Responder {
+    if let Some(user) = session.get::<SessionUser>("ekklesia").unwrap() {
+        println!("User: {:?}", user);
+    } else {
+        session
+            .insert::<SessionUser>(
+                "ekklesia",
+                SessionUser {
+                    email: String::from("jake.g.mckenney@gmail.com"),
+                },
+            )
+            .unwrap();
+    }
+    // let session_user = SessionUser {
+    //     email: String::from("jake.g.mckenney@gmail.com"),
+    // };
+    // let serialize_session_user = serde_json::to_string(&session_user).unwrap();
+    // Identity::login(&req.extensions(), serialize_session_user).unwrap();
     HttpResponse::Ok().finish()
 }

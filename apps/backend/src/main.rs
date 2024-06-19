@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/", web::get().to(HttpResponse::Ok)),
             )
     })
-    .bind(("127.0.0.1", PORT))?
+    .bind(("0.0.0.0", PORT))?
     .workers(NUM_WORKERS)
     .run()
     .await;

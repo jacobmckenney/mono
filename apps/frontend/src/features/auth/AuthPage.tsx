@@ -96,6 +96,7 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 </A>
                             </div>
                         </div>
+                        <Button onClick={() => ekklesiaApi.get("set-cookie")}>Set Cookie!!</Button>
                         <p
                             class={cn(
                                 "text-white m-6 xl:hidden max-sm:self-center self-end",

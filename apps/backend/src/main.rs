@@ -52,6 +52,7 @@ async fn main() -> std::io::Result<()> {
                 .cookie_name(app_state.app_name.clone())
                 .cookie_secure(true)
                 .cookie_content_security(CookieContentSecurity::Private)
+                .cookie_same_site(SameSite::None)
                 .cookie_http_only(false)
                 .build(),
                 _ => SessionMiddleware::builder(
@@ -70,6 +71,7 @@ async fn main() -> std::io::Result<()> {
             })
             .app_data(web::Data::new(app_state.clone()))
             .service(auth::auth_router())
+            .service(set_cookie)
             .service(
                 web::scope("")
                     .wrap(middlewares::user_auth::AddUser::new())
@@ -88,4 +90,11 @@ async fn main() -> std::io::Result<()> {
 async fn find_user(user: SessionUser, app: Data<AppState>) -> Result<impl Responder> {
     let user = app.db.get_user(&user.email).await.unwrap().unwrap();
     return Ok(web::Json(user));
+}
+
+#[get("/set-cookie")]
+async fn set_cookie() -> impl Responder {
+    HttpResponse::Ok()
+        .cookie(actix_web::cookie::Cookie::build("test", "test").finish())
+        .finish()
 }

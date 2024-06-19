@@ -51,8 +51,6 @@ async fn main() -> std::io::Result<()> {
                 .cookie_path(String::from("/"))
                 .cookie_name(app_state.app_name.clone())
                 .cookie_secure(true)
-                .cookie_content_security(CookieContentSecurity::Private)
-                .cookie_same_site(SameSite::None)
                 .cookie_http_only(false)
                 .build(),
                 _ => SessionMiddleware::builder(

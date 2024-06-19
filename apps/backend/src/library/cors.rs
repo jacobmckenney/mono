@@ -7,8 +7,8 @@ pub fn configure_cors(environment: &str) -> Cors {
     return match environment {
         "production" => Cors::default()
             .allowed_origin("https://app.ekklesia.dev")
-            .allowed_headers(vec![CONTENT_TYPE])
-            .allowed_methods(vec!["GET", "POST", "OPTIONS"])
+            .allow_any_header()
+            .allow_any_method()
             .supports_credentials()
             .max_age(3600),
         _ => Cors::default()

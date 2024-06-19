@@ -23,14 +23,21 @@ use library::{
 const NUM_WORKERS: usize = 4;
 const PORT: u16 = 8080;
 
-// https://mureithi.me/blog/simple-authentication-approach-with-actix-web
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     let app_state = state::create_app_state().await;
     let environment = app_state.environment.clone();
+    let address = match environment.as_str() {
+        "production" => "0.0.0.0",
+        _ => "127.0.0.1",
+    };
+    println!(
+        "Starting server in {} environment. Address: {}",
+        environment.clone(),
+        address
+    );
     let _ = HttpServer::new(move || {
         App::new()
             .wrap(cors::configure_cors(app_state.environment.clone().as_str()))
@@ -71,13 +78,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/", web::get().to(HttpResponse::Ok)),
             )
     })
-    .bind((
-        match environment.clone().as_str() {
-            "production" => "0.0.0.0",
-            _ => "127.0.0.1",
-        },
-        PORT,
-    ))?
+    .bind((address, PORT))?
     .workers(NUM_WORKERS)
     .run()
     .await;

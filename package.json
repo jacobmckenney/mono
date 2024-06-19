@@ -5,8 +5,9 @@
         "build": "turbo build",
         "dev": "turbo dev",
         "db:migrate": "pnpm --filter @ekklesia/db db:migrate",
-        "backend:build-docker": "docker build -t backend .",
-        "backend:start-docker": "docker run --env-file .env -p 127.0.0.1:8080:8080 backend"
+        "backend:build-docker": "docker build -t jacobgmckenney/ekklesia:backend .",
+        "backend:start-docker": "docker run --env-file .env -p 127.0.0.1:8080:8080 jacobgmckenney/ekklesia:backend",
+        "backend:push-docker": "docker push jacobgmckenney/ekklesia:backend"
     },
     "author": "Jacob McKenney",
     "license": "ISC"

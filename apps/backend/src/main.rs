@@ -1,7 +1,7 @@
 mod api;
 mod library;
 
-use actix_identity::IdentityMiddleware;
+use actix_identity::{Identity, IdentityMiddleware};
 use actix_session::{
     config::CookieContentSecurity, storage::CookieSessionStore, SessionMiddleware,
 };
@@ -9,7 +9,7 @@ use actix_web::{
     cookie::SameSite,
     get,
     web::{self, Data},
-    App, HttpResponse, HttpServer, Responder, Result,
+    App, HttpMessage, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
 use api::{
     auth,
@@ -72,6 +72,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(app_state.clone()))
             .service(auth::auth_router())
             .service(set_cookie)
+            .service(set_session)
             .service(
                 web::scope("")
                     .wrap(middlewares::user_auth::AddUser::new())
@@ -97,4 +98,14 @@ async fn set_cookie() -> impl Responder {
     HttpResponse::Ok()
         .cookie(actix_web::cookie::Cookie::build("test", "test").finish())
         .finish()
+}
+
+#[get("set-session")]
+async fn set_session(req: HttpRequest) -> impl Responder {
+    let session_user = SessionUser {
+        email: String::from("jake.g.mckenney@gmail.com"),
+    };
+    let serialize_session_user = serde_json::to_string(&session_user).unwrap();
+    Identity::login(&req.extensions(), serialize_session_user).unwrap();
+    HttpResponse::Ok().finish()
 }

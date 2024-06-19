@@ -88,7 +88,6 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 <GoogleAuthButton size="xs" theme="white" type={type} />
                                 <MicrosoftAuthButton size="xs" theme="white" type={type} />
                             </div>
-                            <p class="text-white">CHANGE</p>
                             <div class="text-white text-xs">
                                 Don't have an account?{" "}
                                 <A class="hover:text-gray-3" replace href={`/auth/${info.other.href}`}>
@@ -96,8 +95,6 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 </A>
                             </div>
                         </div>
-                        <Button onClick={() => ekklesiaApi.get("set-cookie")}>Set Cookie!!</Button>
-                        <Button onClick={() => ekklesiaApi.get("set-session")}>Set Session!!</Button>
                         <p
                             class={cn(
                                 "text-white m-6 xl:hidden max-sm:self-center self-end",

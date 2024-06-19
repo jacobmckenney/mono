@@ -36,7 +36,7 @@ export const AuthPage: Component<Props> = ({ type }) => {
     const { isIos, isWeb, platform } = usePlatform();
     return (
         <>
-            <div class="w-[100vw] flex flex-row h-[100vh]">
+            <div class="w-[100vw] flex flex-row h-[100dvh]">
                 <div class="relative w-1/2 bg-white max-xl:hidden">
                     <div class="absolute top-1/3 right-1/2 translate-x-1/2 flex flex-col items-center gap-3">
                         <h1 class="text-5xl">Ekklesia</h1>

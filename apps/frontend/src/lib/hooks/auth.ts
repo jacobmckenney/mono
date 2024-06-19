@@ -27,7 +27,6 @@ export const useUser = () => {
                                 response.status === 401 &&
                                 !["/auth/sign-in", "/auth/sign-up"].includes(location.pathname)
                             ) {
-                                console.log("re-routing");
                                 navigate("/auth/sign-in", { replace: true });
                             }
                         },

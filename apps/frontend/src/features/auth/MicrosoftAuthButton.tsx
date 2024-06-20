@@ -11,11 +11,11 @@ interface Props extends ButtonProps {
 export const MicrosoftAuthButton: Component<Props> = ({ type, ...rest }) => {
     const getLink = createMutation(() => ({
         mutationFn: async () => {
-            const res = await ekklesiaApi.get("auth/link/google");
+            const res = await ekklesiaApi.get("auth/link/microsoft");
             const json = await res.json();
             return authUrlSchema.parse(json).url;
         },
-        mutationKey: ["get-google-auth-url"],
+        mutationKey: ["get-microsoft-auth-url"],
         onSuccess: (url) => {
             window.location.href = url;
         },

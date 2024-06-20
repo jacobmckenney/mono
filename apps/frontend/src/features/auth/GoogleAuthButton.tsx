@@ -16,7 +16,6 @@ export const GoogleAuthButton: Component<Props> = ({ type, ...rest }) => {
     // TODO: factor into "Auth Button" and use for Google + Microsoft, etc.
     const getLink = createMutation(() => ({
         mutationFn: async () => {
-            console.log(window.location.origin);
             const res = await ekklesiaApi.get("auth/link/google");
             const json = await res.json();
             return authUrlSchema.parse(json).url;

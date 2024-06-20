@@ -1,6 +1,7 @@
 import { createMutation } from "@tanstack/solid-query";
 import { Component } from "solid-js";
 import { Button, ButtonProps } from "../../components/Button";
+import { ekklesiaApi } from "../../lib/ky";
 import { authUrlSchema } from "./GoogleAuthButton";
 
 interface Props extends ButtonProps {
@@ -10,9 +11,7 @@ interface Props extends ButtonProps {
 export const MicrosoftAuthButton: Component<Props> = ({ type, ...rest }) => {
     const getLink = createMutation(() => ({
         mutationFn: async () => {
-            const res = await fetch("http://localhost:8080/auth/link/microsoft", {
-                method: "GET",
-            });
+            const res = await ekklesiaApi.get("auth/link/google");
             const json = await res.json();
             return authUrlSchema.parse(json).url;
         },

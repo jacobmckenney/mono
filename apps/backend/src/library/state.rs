@@ -1,7 +1,6 @@
+use super::auth::{AuthClient, OAuthConfig};
 use actix_web::cookie::Key;
 use db::DB;
-
-use super::auth::{AuthClient, OAuthConfig};
 
 #[derive(Clone)]
 pub struct AppState {

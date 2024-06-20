@@ -2,14 +2,10 @@ mod api;
 mod library;
 
 use actix_identity::IdentityMiddleware;
-use actix_session::{
-    config::CookieContentSecurity, storage::CookieSessionStore, Session, SessionMiddleware,
-};
 use actix_web::{
-    cookie::SameSite,
     get,
     web::{self, Data},
-    App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
+    App, HttpResponse, HttpServer, Responder, Result,
 };
 use api::{
     auth,

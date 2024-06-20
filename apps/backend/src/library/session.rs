@@ -17,7 +17,6 @@ pub fn configure_session(
                 .cookie_secure(true)
                 .cookie_content_security(CookieContentSecurity::Private)
                 .cookie_same_site(SameSite::None)
-                .cookie_http_only(false)
                 .build()
         }
         _ => SessionMiddleware::builder(CookieSessionStore::default(), encryption_key.clone())
@@ -28,7 +27,6 @@ pub fn configure_session(
             .cookie_content_security(CookieContentSecurity::Private)
             // TODO: configure same site properly depending on the environment
             .cookie_same_site(SameSite::None)
-            .cookie_http_only(false)
             .build(),
     };
 }

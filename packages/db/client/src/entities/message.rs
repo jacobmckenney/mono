@@ -4,20 +4,20 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "session")]
+#[sea_orm(table_name = "message")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub user_id: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
-    pub expires_at: DateTime,
-    pub device_ip: Option<String>,
-    pub user_agent: Option<String>,
+    pub user_id: String,
+    pub content: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::message_to_message_thread::Entity")]
+    MessageToMessageThread,
     #[sea_orm(
         belongs_to = "super::user::Entity",
         from = "Column::UserId",
@@ -26,6 +26,12 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     User,
+}
+
+impl Related<super::message_to_message_thread::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::MessageToMessageThread.def()
+    }
 }
 
 impl Related<super::user::Entity> for Entity {

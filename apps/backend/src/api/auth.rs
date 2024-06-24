@@ -67,6 +67,8 @@ mod auth_links {
 
 mod auth_callbacks {
 
+    use std::collections::HashMap;
+
     use actix_identity::Identity;
     use actix_web::{
         get,
@@ -76,7 +78,10 @@ mod auth_callbacks {
     };
     use db::entities::user;
 
-    use crate::{api::middlewares::user_auth::SessionUser, library::state::AppState};
+    use crate::{
+        api::middlewares::user_auth::SessionUser,
+        library::{env::get_base_url, state::AppState},
+    };
 
     #[derive(serde::Deserialize, Debug)]
     struct GoogleCallbackResponse {
@@ -84,13 +89,24 @@ mod auth_callbacks {
     }
 
     #[get("/google")]
-    async fn google_callback(
-        query: Query<GoogleCallbackResponse>,
-        app: Data<AppState>,
-        request: HttpRequest,
-    ) -> impl Responder {
+    async fn google_callback(app: Data<AppState>, request: HttpRequest) -> impl Responder {
+        let query = Query::<HashMap<String, String>>::from_query(request.query_string()).unwrap();
+        let code = query.get("code");
+        if code.is_none() {
+            return HttpResponse::Found()
+                .append_header(
+                    // TODO: make this env agnostic, and incorporate sign-in type,
+                    // as well as down below
+                    (LOCATION, format!("{}/auth/sign-in", get_base_url())),
+                )
+                .finish();
+        }
         // Validate user anwd then get
-        let tokens = match app.auth_client.google_get_tokens(query.code.as_str()).await {
+        let tokens = match app
+            .auth_client
+            .google_get_tokens(code.unwrap().as_str())
+            .await
+        {
             Ok(tokens) => tokens,
             Err(e) => {
                 return HttpResponse::InternalServerError()
@@ -124,7 +140,13 @@ mod auth_callbacks {
             Some(_) => HttpResponse::Found()
                 .append_header((LOCATION, app.app_auth_redirect_url.as_str()))
                 .finish(),
-            None => HttpResponse::Unauthorized().finish(),
+            None => HttpResponse::Found()
+                .append_header(
+                    // TODO: make this env agnostic, and incorporate sign-in type,
+                    // as well as down below
+                    (LOCATION, format!("{}/auth/sign-in", get_base_url())),
+                )
+                .finish(),
         };
     }
     #[derive(serde::Deserialize, Debug)]
@@ -133,15 +155,23 @@ mod auth_callbacks {
     }
 
     #[get("/microsoft")]
-    pub async fn microsoft_callback(
-        query: Query<MicrosoftCallbackResponse>,
-        app: Data<AppState>,
-        request: HttpRequest,
-    ) -> impl Responder {
+    pub async fn microsoft_callback(app: Data<AppState>, request: HttpRequest) -> impl Responder {
+        // Don't use built-in query so we can re-direct
+        let query = Query::<HashMap<String, String>>::from_query(request.query_string()).unwrap();
+        let code = query.get("code");
+        if code.is_none() {
+            return HttpResponse::Found()
+                .append_header(
+                    // TODO: make this env agnostic, and incorporate sign-in type,
+                    // as well as down below
+                    (LOCATION, format!("{}/auth/sign-in", get_base_url())),
+                )
+                .finish();
+        }
         // TODO: get sign-in or sign-up type via state
         let profile = app
             .auth_client
-            .microsoft_get_tokens(query.code.as_str())
+            .microsoft_get_tokens(code.unwrap().as_str())
             .await
             .unwrap();
         // Use preferred_username for security reasons
@@ -153,7 +183,13 @@ mod auth_callbacks {
             Some(_) => HttpResponse::Found()
                 .append_header((LOCATION, app.app_auth_redirect_url.as_str()))
                 .finish(),
-            None => HttpResponse::Unauthorized().finish(),
+            None => HttpResponse::Found()
+                .append_header(
+                    // TODO: make this env agnostic, and incorporate sign-in type,
+                    // as well as down below
+                    (LOCATION, format!("{}/auth/sign-in", get_base_url())),
+                )
+                .finish(),
         };
     }
 

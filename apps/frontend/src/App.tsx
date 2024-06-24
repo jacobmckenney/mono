@@ -51,5 +51,9 @@ export const App: Component = () => {
 
 const Test: Component = () => {
     const user = useUser();
-    return <div class="text-white">hello {user.data?.name}</div>;
+    return (
+        <>
+            <div class="text-white">hello {user.data?.name}</div>
+        </>
+    );
 };

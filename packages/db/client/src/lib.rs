@@ -1,4 +1,6 @@
+pub mod active;
 pub mod entities;
+
 use entities::{prelude::*, *};
 use sea_orm::*;
 use uuid::Uuid;
@@ -30,7 +32,7 @@ impl DB {
             image: Set(db_image),
             ..Default::default()
         };
-        User::insert(new_user).exec(&self.connection).await?;
+        user::ActiveModel::insert(new_user, &self.connection).await?;
         Ok(())
     }
 

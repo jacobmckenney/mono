@@ -954,7 +954,6 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "futures",
- "has-timestamps",
  "sea-orm",
  "serde",
  "uuid",
@@ -1388,15 +1387,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
-]
-
-[[package]]
-name = "has-timestamps"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]

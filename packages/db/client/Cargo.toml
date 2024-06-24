@@ -9,4 +9,3 @@ futures = "0.3.30"
 uuid = {version = "1.8.0", features = ["v4"]}
 serde = "1.0.203"
 chrono = "0.4.38"
-has-timestamps ={ path = "../macros/has-timestamps"}

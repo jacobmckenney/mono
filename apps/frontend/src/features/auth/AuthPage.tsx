@@ -83,10 +83,9 @@ export const AuthPage: Component<Props> = ({ type }) => {
                                 <p class="text-white">or</p>
                                 <hr class="w-1/2 border-[0.5px] border-white" />
                             </div>
-                            <div class="flex items-center gap-3"></div>
-                            <div class="flex gap-10 items-center">
-                                <GoogleAuthButton size="xs" theme="white" type={type} />
-                                <MicrosoftAuthButton size="xs" theme="white" type={type} />
+                            <div class="flex flex-col gap-3 items-center">
+                                <GoogleAuthButton size="xs" theme="black" type={type} />
+                                <MicrosoftAuthButton size="xs" theme="black" type={type} />
                             </div>
                             <div class="text-white text-xs">
                                 Don't have an account?{" "}

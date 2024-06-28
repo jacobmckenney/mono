@@ -8,9 +8,10 @@ use actix_web::{
     App, HttpResponse, HttpServer, Responder, Result,
 };
 use api::{
-    auth,
+    admin, auth,
     middlewares::{self, user_auth::SessionUser},
 };
+use db::data::user::get_user;
 use library::{
     cors, session,
     state::{self, AppState},
@@ -48,6 +49,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("")
                     .wrap(middlewares::user_auth::AddUser::new())
+                    .service(admin::admin_router())
                     .service(find_user)
                     .route("/", web::get().to(HttpResponse::Ok)),
             )
@@ -61,6 +63,6 @@ async fn main() -> std::io::Result<()> {
 
 #[get("/user")]
 async fn find_user(user: SessionUser, app: Data<AppState>) -> Result<impl Responder> {
-    let user = app.db.get_user(&user.email).await.unwrap().unwrap();
+    let user = get_user(&app.db, &user.email).await.unwrap();
     return Ok(web::Json(user));
 }

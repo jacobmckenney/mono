@@ -3,10 +3,19 @@ import { Component } from "solid-js";
 import { AuthPage } from "./features/auth/AuthPage";
 import { LogoutButton } from "./features/auth/LogoutButton";
 import "./index.css";
+import { AdminLayout } from "./layouts/AdminLayout";
 import { AppLayout } from "./layouts/AppLayout";
 import { useUser } from "./lib/hooks/auth";
 
 export const appRoutes = [
+    {
+        path: "/admin",
+        component: () => (
+            <AdminLayout>
+                <div>Admin Page</div>,
+            </AdminLayout>
+        ),
+    },
     {
         path: "/auth",
         children: [

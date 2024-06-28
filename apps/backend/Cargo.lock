@@ -580,6 +580,7 @@ dependencies = [
  "jsonwebtoken",
  "log",
  "reqwest",
+ "sea-orm",
  "serde",
  "serde_json",
 ]

@@ -1,11 +1,12 @@
 use super::auth::{AuthClient, OAuthConfig};
 use actix_web::cookie::Key;
-use db::DB;
+use db::create_db_connection;
+use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]
 pub struct AppState {
     pub auth_client: AuthClient,
-    pub db: DB,
+    pub db: DatabaseConnection,
     pub environment: String,
     pub app_name: String,
     pub encryption_key: Key,
@@ -41,7 +42,7 @@ pub async fn create_app_state() -> AppState {
     };
     // Db connection
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let db = DB::new(db_url).await.unwrap();
+    let db = create_db_connection(db_url).await.unwrap();
 
     let auth_client = AuthClient { google, microsoft };
     AppState {

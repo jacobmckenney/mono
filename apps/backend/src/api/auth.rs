@@ -76,7 +76,11 @@ mod auth_callbacks {
         web::{Data, Query},
         HttpMessage, HttpRequest, HttpResponse, Responder,
     };
-    use db::entities::user;
+    use db::{
+        data::user::{get_user, insert_user, InsertUserData},
+        entities::user,
+    };
+    use sea_orm::DatabaseConnection;
 
     use crate::{
         api::middlewares::user_auth::SessionUser,
@@ -193,30 +197,39 @@ mod auth_callbacks {
         };
     }
 
-    pub async fn sign_in(db: &db::DB, email: &str) -> Option<user::Model> {
+    pub async fn sign_in(db: &DatabaseConnection, email: &str) -> Option<user::Model> {
         let lowercase_email = email.to_lowercase();
-        let user = db.get_user(&lowercase_email).await.unwrap();
-        return user;
+        let user = get_user(db, &lowercase_email).await.unwrap();
+        return user.map(|user| user.user);
     }
 
     async fn sign_up(
-        db: &db::DB,
+        db: &DatabaseConnection,
         email: &str,
         name: Option<&str>,
         image: Option<&str>,
     ) -> Result<user::Model, String> {
         let lowercase_email = email.to_lowercase();
-        let mut user = db.get_user(&lowercase_email).await.unwrap();
+        let mut user = get_user(db, &lowercase_email).await.unwrap();
         if user.is_none() {
-            db.insert_user(&lowercase_email, name, image).await.unwrap();
+            insert_user(
+                db,
+                InsertUserData {
+                    email: String::from(lowercase_email.clone()),
+                    name: name.map(|s| s.to_string()),
+                    image: image.map(|s| s.to_string()),
+                },
+            )
+            .await
+            .unwrap();
         }
-        user = db.get_user(&lowercase_email).await.unwrap();
-        return Ok(user.unwrap());
+        user = get_user(db, &lowercase_email).await.unwrap();
+        return Ok(user.unwrap().user);
     }
 
     pub async fn sign_in_or_sign_up(
         request: HttpRequest,
-        db: &db::DB,
+        db: &DatabaseConnection,
         email: &str,
         name: Option<&str>,
         image: Option<&str>,
